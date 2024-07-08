@@ -68,4 +68,3 @@ def getInfo(pkt):
         bssid = pkt[Dot11].addr2
         print(bssid)       
 
-print(bssid)
