@@ -66,5 +66,5 @@ ntwrks.set_index('BSSID', inplace=True)
 def getInfo(pkt):
     if pkt.haslayer(Dot11Beacon):
         bssid = pkt[Dot11].addr2
-        print(bssid)       
+              
 
