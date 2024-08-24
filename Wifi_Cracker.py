@@ -61,15 +61,14 @@ from scapy.all import *
 import pandas as pd
 
 # Initialize the DataFrame
-ntwrks = pd.DataFrame(columns=['BSSID', 'SSID', 'dBm_signal', 'channel', 'wifi_type'])
-ntwrks.set_index('BSSID', inplace=True)
+ntwrks = pd.DataFrame(columns=['BSSID', 'SSID', 'dBm_signal', 'channel', 'wifi_type']).set_index('BSSID')
 
-def getInfo(pkt):
+def get_info(pkt):
     if pkt.haslayer(Dot11Beacon):
         bssid = pkt[Dot11].addr2
         ssid = pkt[Dot11Elt].info.decode() if pkt[Dot11Elt].info else 'Hidden SSID'
         dBm_signal = pkt.dBm_AntSignal if hasattr(pkt, 'dBm_AntSignal') else 'N/A'
-        channel = int(ord(pkt[Dot11Elt:3].info)) if pkt[Dot11Elt:3].info else 'N/A'
+        channel = ord(pkt[Dot11Elt:3].info) if pkt[Dot11Elt:3].info else 'N/A'
         
         return {
             'BSSID': bssid,
@@ -79,14 +78,10 @@ def getInfo(pkt):
         }
     return None
 
-def packetHandler(pkt):
-    info = getInfo(pkt)
+def packet_handler(pkt):
+    info = get_info(pkt)
     if info:
         ntwrks.loc[info['BSSID']] = [info['SSID'], info['dBm_signal'], info['channel'], 'WPA/WPA2']
 
 # Example usage: sniffing packets
-sniff(iface='wlan0mon', prn=packetHandler, store=0)
-
-# Example usage
-# sniff(prn=getInfo, iface="wlan0mon", count=10)
-
+sniff(iface='wlan0mon', prn=packet_handler, store=0)
