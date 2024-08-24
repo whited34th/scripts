@@ -60,11 +60,33 @@ Dot11beacon is a class that represents an 802.11 Beacon Frame, Beacon Frames are
 from scapy.all import *
 import pandas as pd
 
-ntwrks = pd.DataFrame(columns=['BSSID', 'SSID', 'dBm_signal', 'channel','wifi_type'])
+# Initialize the DataFrame
+ntwrks = pd.DataFrame(columns=['BSSID', 'SSID', 'dBm_signal', 'channel', 'wifi_type'])
 ntwrks.set_index('BSSID', inplace=True)
 
 def getInfo(pkt):
     if pkt.haslayer(Dot11Beacon):
         bssid = pkt[Dot11].addr2
-              
+        ssid = pkt[Dot11Elt].info.decode() if pkt[Dot11Elt].info else 'Hidden SSID'
+        dBm_signal = pkt.dBm_AntSignal if hasattr(pkt, 'dBm_AntSignal') else 'N/A'
+        channel = int(ord(pkt[Dot11Elt:3].info)) if pkt[Dot11Elt:3].info else 'N/A'
+        
+        return {
+            'BSSID': bssid,
+            'SSID': ssid,
+            'dBm_signal': dBm_signal,
+            'channel': channel
+        }
+    return None
+
+def packetHandler(pkt):
+    info = getInfo(pkt)
+    if info:
+        ntwrks.loc[info['BSSID']] = [info['SSID'], info['dBm_signal'], info['channel'], 'WPA/WPA2']
+
+# Example usage: sniffing packets
+sniff(iface='wlan0mon', prn=packetHandler, store=0)
+
+# Example usage
+# sniff(prn=getInfo, iface="wlan0mon", count=10)
 
